@@ -23,44 +23,91 @@ class Base:
         # Sets the border width of the window.
         self.window.set_border_width(10)
 
-        # We create a box to pack widgets into.  This is described in detail
-        # in the "packing" section. The box is not really visible, it
-        # is just used as a tool to arrange widgets.
-        self.box1 = gtk.HBox(False, 0)
+        # We create a vertical box (vbox) to pack our horizontal boxes into.
+        # This allows us to stack the horizontal boxes filled with buttons one
+        # on top of the other in this vbox.
+        box1 = gtk.VBox(False, 0)
 
-        # Put the box into the main window.
-        self.window.add(self.box1)
+        # We create a horizontal box to pack widgets into. The box is not
+        # really visible, it is just used as a tool to arrange widgets.
+        hbox1 = gtk.HBox(False, 0)
 
-        # Creates a new button with the label "Hello World".
-        self.button_simrecon = gtk.Button("Run SIM Reconstruction")
-        self.button_simrecon.connect("clicked", self.start_simrecon, None)
-        # We pack this button into the invisible box, which has been
-        # packed into the window.
-        self.box1.pack_start(self.button_simrecon, True, True, 0)
-
-        # self.window.add(self.button_simrecon)
-        self.button_simrecon.show()
-
-        # Creates a new button for raw data file selection
-        self.button_file = gtk.Button("File")
-        self.button_file.connect("clicked", self.select_file, None)
-        self.box1.pack_start(self.button_file, True, True, 0)
-        self.button_file.show()
-
-        # Creates a new button for otf file selection
-        self.button_otf = gtk.Button("OTF")
-        self.button_otf.connect("clicked", self.select_otf, None)
-        self.box1.pack_start(self.button_otf, True, True, 0)
-        self.button_otf.show()
+        # Create a new button for raw data file selection
+        button_file = gtk.Button("File")
+        button_file.connect("clicked", self.select_file, None)
+        hbox1.pack_start(button_file, False, False, 0)
+        button_file.show()
 
         # Create text fields to show file names
         self.text_file = gtk.Entry(max=0)
         self.text_file.set_text(self.filename)
         self.text_file.set_editable(True)
-        self.box1.pack_start(self.text_file, True, True, 0)
+        hbox1.pack_start(self.text_file, True, True, 0)
         self.text_file.show()
 
-        self.box1.show()
+        box1.pack_start(hbox1, False, False, 0)
+        hbox1.show()
+
+        # We create a horizontal box to pack widgets into. The box is not
+        # really visible, it is just used as a tool to arrange widgets.
+        hbox2 = gtk.HBox(False, 0)
+
+        # Create a new button for otf file selection
+        button_otf = gtk.Button("OTF")
+        button_otf.connect("clicked", self.select_otf, None)
+        hbox2.pack_start(button_otf, False, False, 0)
+        button_otf.show()
+
+        # Create text fields to show file names
+        self.text_otf = gtk.Entry(max=0)
+        self.text_otf.set_text(self.otf)
+        self.text_otf.set_editable(True)
+        hbox2.pack_start(self.text_otf, True, True, 0)
+        self.text_otf.show()
+
+        box1.pack_start(hbox2, False, False, 0)
+        hbox2.show()
+
+        # We create a horizontal box to pack widgets into. The box is not
+        # really visible, it is just used as a tool to arrange widgets.
+        hbox3 = gtk.HBox(False, 0)
+
+        # Create a new button for output data file selection
+        button_out = gtk.Button("Output")
+        button_out.connect("clicked", self.select_out, None)
+        hbox3.pack_start(button_out, False, False, 0)
+        button_out.show()
+
+        # Create text fields to show file names
+        self.text_out = gtk.Entry(max=0)
+        self.text_out.set_text(self.out)
+        self.text_out.set_editable(True)
+        hbox3.pack_start(self.text_out, True, True, 0)
+        self.text_out.show()
+
+        box1.pack_start(hbox3, False, False, 0)
+        hbox3.show()
+
+        # Adding a horizontal seperator
+        separator = gtk.HSeparator()
+        box1.pack_start(separator, False, True, 5)
+        separator.show()
+
+        # We create a horizontal box to pack widgets into. The box is not
+        # really visible, it is just used as a tool to arrange widgets.
+        hbox4 = gtk.HBox(False, 0)
+
+        # Create button
+        button_simrecon = gtk.Button("Run SIM Reconstruction")
+        button_simrecon.connect("clicked", self.start_simrecon, None)
+        hbox4.pack_start(button_simrecon, True, True, 0)
+        button_simrecon.show()
+
+        box1.pack_start(hbox4, False, False, 0)
+        hbox4.show()
+
+        self.window.add(box1)
+        box1.show()
         self.window.show()
 
     def delete_event(self, widget, event, data=None):
@@ -81,7 +128,6 @@ class Base:
              " --input-file " + self.filename +
              " --otf-file " + self.otf +
              " --output-file " + self.out, shell=True)
-        
 
     def select_file(self, widget, data=None):
         # Check for new pygtk: this is new class in PyGtk 2.4
@@ -109,6 +155,7 @@ class Base:
         response = dialog.run()
         if response == gtk.RESPONSE_OK:
             self.filename = dialog.get_filename()
+            self.text_file.set_text(self.filename)
         dialog.destroy()
 
     def select_otf(self, widget, data=None):
@@ -137,6 +184,36 @@ class Base:
         response = dialog.run()
         if response == gtk.RESPONSE_OK:
             self.otf = dialog.get_filename()
+            self.text_otf.set_text(self.otf)
+        dialog.destroy()
+
+    def select_out(self, widget, data=None):
+        # Check for new pygtk: this is new class in PyGtk 2.4
+        if gtk.pygtk_version < (2, 3, 90):
+            print "PyGtk 2.3.90 or later required for this example"
+            raise SystemExit
+
+        dialog = gtk.FileChooserDialog("Open..",
+                                       None,
+                                       gtk.FILE_CHOOSER_ACTION_OPEN,
+                                       (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                                        gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+        dialog.set_default_response(gtk.RESPONSE_OK)
+
+        filter = gtk.FileFilter()
+        filter.set_name("All files")
+        filter.add_pattern("*")
+        dialog.add_filter(filter)
+
+        filter = gtk.FileFilter()
+        filter.set_name("DV files")
+        filter.add_pattern("*.dv")
+        dialog.add_filter(filter)
+
+        response = dialog.run()
+        if response == gtk.RESPONSE_OK:
+            self.out = dialog.get_filename()
+            self.text_out.set_text(self.out)
         dialog.destroy()
 
 
