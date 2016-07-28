@@ -42,6 +42,7 @@ class Base:
         self.text_file = gtk.Entry(max=0)
         self.text_file.set_text(self.filename)
         self.text_file.set_editable(True)
+        self.text_file.connect("changed", self.change_text, "file")
         hbox1.pack_start(self.text_file, True, True, 0)
         self.text_file.show()
 
@@ -62,6 +63,7 @@ class Base:
         self.text_otf = gtk.Entry(max=0)
         self.text_otf.set_text(self.otf)
         self.text_otf.set_editable(True)
+        self.text_otf.connect("changed", self.change_text, "otf")
         hbox2.pack_start(self.text_otf, True, True, 0)
         self.text_otf.show()
 
@@ -82,6 +84,7 @@ class Base:
         self.text_out = gtk.Entry(max=0)
         self.text_out.set_text(self.out)
         self.text_out.set_editable(True)
+        self.text_out.connect("changed", self.change_text, "out")
         hbox3.pack_start(self.text_out, True, True, 0)
         self.text_out.show()
 
@@ -110,6 +113,16 @@ class Base:
         box1.show()
         self.window.show()
 
+    def change_text(self, widget, data):
+        options = {"file": self.text_file,
+                   "otf": self.text_otf,
+                   "out": self.text_out}
+        new_value = options[data].get_text()
+        options = {"file": self.filename,
+                   "otf": self.otf,
+                   "out": self.out}
+        options[data] = new_value
+
     def delete_event(self, widget, event, data=None):
         # return False
         raise SystemExit
@@ -121,9 +134,9 @@ class Base:
 
     def start_simrecon(self, widget, data=None):
         from subprocess import call
-        print "file", self.filename
-        print "otf", self.otf
-        print "output", self.out
+        # print "file", self.filename
+        # print "otf", self.otf
+        # print "output", self.out
         call("~/sim-reconstruction/cudaSirecon/cudaSireconDriver " +
              " --input-file " + self.filename +
              " --otf-file " + self.otf +
