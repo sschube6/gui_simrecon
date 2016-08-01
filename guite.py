@@ -7,9 +7,18 @@ pygtk.require('2.0')
 class Base:
     def __init__(self):
         # set global variables
-        self.file_fname = "sss"
-        self.otf_fname = ''
-        self.out_fname = './out'
+        self.naming_dict = {"1_file": {"strName": "in",
+                                       "strLabel": "Input",
+                                       "strFname": "test",
+                                       "objTextfield": None},
+                            "2_otf": {"strName": "otf",
+                                      "strLabel": "OTF",
+                                      "strFname": "",
+                                      "objTextfield": None},
+                            "3_out": {"strName": "out",
+                                      "strLabel": "Output",
+                                      "strFname": "out",
+                                      "objTextfield": None}}
 
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.window.set_title("cudaSIM")
@@ -42,40 +51,25 @@ class Base:
         # really visible, it is just used as a tool to arrange widgets.
 
         # Create a new button for raw data file selection
-        naming_dict = {"file": {"strName": "in",
-                                "strLabel": "Input",
-                                "objFname": self.file_fname,
-                                "objTextfield": None},
-                       "otf": {"strName": "otf",
-                               "strLabel": "OTF",
-                               "objFname": self.otf_fname,
-                               "objTextfield": None},
-                       "out": {"strName": "out",
-                               "strLabel": "Output",
-                               "objFname": self.out_fname,
-                               "objTextfield": None}}
-        
 
-        # Create a new button for otf file selection
-        strType = "file"
-        parent = hbox1
-        self.make_button(parent=parent, name_dict=naming_dict[strType])
-        ret = self.make_textbox(parent=parent, name_dict=naming_dict[strType])
-        naming_dict[strType]["objTextfield"] = ret
+        for x in self.naming_dict:
+            hbox = gtk.HBox(False, 0)
 
-        # Create a new button for otf file selection
-        strType = "otf"
-        parent = hbox2
-        self.make_button(parent=parent, name_dict=naming_dict[strType])
-        ret = self.make_textbox(parent=parent, name_dict=naming_dict[strType])
-        naming_dict[strType]["objTextfield"] = ret
+            button = gtk.Button(self.naming_dict[x]["strLabel"])
+            button.connect("clicked", self.select_file, x)
+            hbox.pack_start(button, False, False, 0)
+            button.show()
 
-        # Create a new button for output data file selection
-        strType = "out"
-        parent = hbox3
-        self.make_button(parent=parent, name_dict=naming_dict[strType])
-        ret = self.make_textbox(parent=parent, name_dict=naming_dict[strType])
-        naming_dict[strType]["objTextfield"] = ret
+            textbox = gtk.Entry(max=0)
+            textbox.set_text(self.naming_dict[x]["strFname"])
+            textbox.set_editable(True)
+            textbox.connect("changed", self.update_text, x)
+            hbox.pack_start(textbox, True, True, 0)
+            textbox.show()
+
+            self.naming_dict[x]["objTextfield"] = textbox
+            hbox.show()
+            box.pack_start(hbox, False, False, 0)
 
         # Adding a horizontal seperator
         separator = gtk.HSeparator()
@@ -83,7 +77,7 @@ class Base:
 
         # Create sim button
         button_simrecon = gtk.Button("Run SIM Reconstruction")
-        button_simrecon.connect("clicked", self.start_simrecon, naming_dict)
+        button_simrecon.connect("clicked", self.start_simrecon, None)
         hbox4.pack_start(button_simrecon, True, True, 0)
         button_simrecon.show()
 
@@ -97,35 +91,28 @@ class Base:
         self.window.add(box)
         self.window.show()
 
-    def make_button(self, parent, name_dict):
-        button = gtk.Button(name_dict["strLabel"])
-        button.connect("clicked", self.select_file, name_dict)
-        parent.pack_start(button, False, False, 0)
-        button.show()
+    def update_text(self, widget, strType):
+        fname = self.naming_dict[strType]["objTextfield"].get_text()
+        self.naming_dict[strType]["strFname"] = fname
 
-    def make_textbox(self, parent, name_dict):
-        textbox = gtk.Entry(max=0)
-        textbox.set_text(name_dict["objFname"])
-        textbox.set_editable(True)
-        textbox.connect("changed", self.update_text, name_dict)
-        parent.pack_start(textbox, True, True, 0)
-        textbox.show()
-        return textbox
-
-    def update_text(self, widget, name_dict):
-        fname = name_dict["objTextfield"].get_text()
-        name_dict["objFname"] = fname
-
-    def start_simrecon(self, widget, name_dict):
-        print "file", name_dict["file"]["objFname"]
-        print "otf", name_dict["otf"]["objFname"]
-        print "output", name_dict["out"]["objFname"]
+    def start_simrecon(self, widget, data):
+        for x in self.naming_dict:
+            if self.naming_dict[x]["strName"] == "in":
+                inFname = self.naming_dict[x]["strFname"]
+            elif self.naming_dict[x]["strName"] == "otf":
+                otfFname = self.naming_dict[x]["strFname"]
+            elif self.naming_dict[x]["strName"] == "out":
+                outFname = self.naming_dict[x]["strFname"]
+        # print "file", inFname
+        # print "otf", otfFname
+        # print "output", outFname
         call("~/sim-reconstruction/cudaSirecon/cudaSireconDriver " +
-             " --input-file " + name_dict["file"]["objFname"] +
-             " --otf-file " + name_dict["otf"]["objFname"] +
-             " --output-file " + name_dict["out"]["objFname"], shell=True)
+             " --input-file " + inFname +
+             " --otf-file " + otfFname +
+             " --output-file " + outFname,
+             shell=True)
 
-    def select_file(self, widget, name_dict):
+    def select_file(self, widget, strType):
         # Check for new pygtk: this is new class in PyGtk 2.4
         if gtk.pygtk_version < (2, 3, 90):
             print "PyGtk 2.3.90 or later required for this example"
@@ -151,8 +138,8 @@ class Base:
         response = dialog.run()
         if response == gtk.RESPONSE_OK:
             fname = dialog.get_filename()
-            name_dict["objFname"] = fname
-            name_dict["objTextfield"].set_text(fname)
+            self.naming_dict[strType]["strFname"] = fname
+            self.naming_dict[strType]["objTextfield"].set_text(fname)
         dialog.destroy()
 
     def delete_event(self, widget, event, data=None):
@@ -164,7 +151,6 @@ class Base:
         # and waits for an event to occur (like a key press or mouse event).
         gtk.main()
 
-# print __name__
 if __name__ == "__main__":
     base = Base()
     base.main()
