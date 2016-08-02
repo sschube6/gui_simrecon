@@ -17,8 +17,13 @@ pygtk.require('2.0')
 
 class Gui_cudaSimrecon:
     def __init__(self):
-        # set global variables
+        ###############
+        # Set global variables
         self.callto = "~/sim-reconstruction/cudaSirecon/cudaSireconDriver"
+
+        # A dictionary serves for keeping track of how the buttons and text
+        # entry fields are named and which parameters for input, otf, output,
+        # etc. were selected.
         self.naming_dict = {"1_file": {"strName": "in",
                                        "strLabel": "Input",
                                        "strFname": "test",
@@ -31,7 +36,9 @@ class Gui_cudaSimrecon:
                                       "strLabel": "Output",
                                       "strFname": "out",
                                       "objTextfield": None}}
+        ###############
 
+        # Construct a gtk window in which the gui lives.
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.window.set_title("cudaSIM")
 
