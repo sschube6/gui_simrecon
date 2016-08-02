@@ -1,12 +1,24 @@
+"""
+gui_cudaSimrecon_main()
+
+This is a interface for the Betzig cuda SIM reconstruction code. The main
+purpose of the gui is to collect the parameters for the reconstruction
+e. g. input, otf, output) and calling the cudaSireconDriver in the shell.
+The implementation uses pygtk.
+
+Author: Sebastian Schubert, mail: sschube6@gmail.com
+"""
+
 import pygtk
 import gtk
 from subprocess import call
 pygtk.require('2.0')
 
 
-class Base:
+class Gui_cudaSimrecon:
     def __init__(self):
         # set global variables
+        self.callto = "~/sim-reconstruction/cudaSirecon/cudaSireconDriver"
         self.naming_dict = {"1_file": {"strName": "in",
                                        "strLabel": "Input",
                                        "strFname": "test",
@@ -33,25 +45,19 @@ class Base:
         # Sets the border width of the window.
         self.window.set_border_width(10)
 
-        # We create a vertical box (vbox) to pack our horizontal boxes into.
+        # The main layout of the window will consists of boxes that we are
+        # filling with buttons, textfields, etc.
+        # We create one vertical box (vbox) to pack some horizontal boxes into.
         # This allows us to stack the horizontal boxes filled with buttons one
         # on top of the other in this vbox.
         box = gtk.VBox(False, 0)
 
-        hbox1 = gtk.HBox(False, 0)
-        hbox2 = gtk.HBox(False, 0)
-        hbox3 = gtk.HBox(False, 0)
-        hbox4 = gtk.HBox(False, 0)
-        hbox1.show()
-        hbox2.show()
-        hbox3.show()
-        hbox4.show()
-
-        # We create a horizontal box to pack widgets into. The box is not
-        # really visible, it is just used as a tool to arrange widgets.
-
-        # Create a new button for raw data file selection
-
+        # For every key in the dictionary, we create a horizontal box to pack
+        # widgets into. The box is not really visible, it is just used as a
+        # tool to arrange widgets.
+        # Per box we create a button and a text entry .
+        # When the button is pressed we call select_file() and when the text is
+        # changed we call update_text().
         for x in self.naming_dict:
             hbox = gtk.HBox(False, 0)
 
@@ -74,28 +80,30 @@ class Base:
         # Adding a horizontal seperator
         separator = gtk.HSeparator()
         separator.show()
+        box.pack_start(separator, False, True, 5)
 
-        # Create sim button
+        # Create a SIM button with callback to start_simrecon()
+        hbox = gtk.HBox(False, 0)
+        hbox.show()
         button_simrecon = gtk.Button("Run SIM Reconstruction")
         button_simrecon.connect("clicked", self.start_simrecon, None)
-        hbox4.pack_start(button_simrecon, True, True, 0)
+        hbox.pack_start(button_simrecon, True, True, 0)
         button_simrecon.show()
-
-        box.pack_start(hbox1, False, False, 0)
-        box.pack_start(hbox2, False, False, 0)
-        box.pack_start(hbox3, False, False, 0)
-        box.pack_start(separator, False, True, 5)
-        box.pack_start(hbox4, False, False, 0)
+        box.pack_start(hbox, False, False, 0)
 
         box.show()
         self.window.add(box)
         self.window.show()
 
     def update_text(self, widget, strType):
+        # Make sure that the filename stored in the dictionary is updated
+        # when it is changed in the textbox.
         fname = self.naming_dict[strType]["objTextfield"].get_text()
         self.naming_dict[strType]["strFname"] = fname
 
     def start_simrecon(self, widget, data):
+        # Here we will call the cudaSireconDriver in shell
+
         for x in self.naming_dict:
             if self.naming_dict[x]["strName"] == "in":
                 inFname = self.naming_dict[x]["strFname"]
@@ -106,7 +114,7 @@ class Base:
         # print "file", inFname
         # print "otf", otfFname
         # print "output", outFname
-        call("~/sim-reconstruction/cudaSirecon/cudaSireconDriver " +
+        call(self.callto +
              " --input-file " + inFname +
              " --otf-file " + otfFname +
              " --output-file " + outFname,
@@ -118,6 +126,7 @@ class Base:
             print "PyGtk 2.3.90 or later required for this example"
             raise SystemExit
 
+        # Open a dialog to choose the files
         dialog = gtk.FileChooserDialog("Open..",
                                        None,
                                        gtk.FILE_CHOOSER_ACTION_OPEN,
@@ -125,6 +134,7 @@ class Base:
                                         gtk.STOCK_OPEN, gtk.RESPONSE_OK))
         dialog.set_default_response(gtk.RESPONSE_OK)
 
+        # Setting the filters
         filter = gtk.FileFilter()
         filter.set_name("All files")
         filter.add_pattern("*")
@@ -135,6 +145,8 @@ class Base:
         filter.add_pattern("*.dv")
         dialog.add_filter(filter)
 
+        # If a valid file is selected we want to change the fname setting and
+        # update the texbox.
         response = dialog.run()
         if response == gtk.RESPONSE_OK:
             fname = dialog.get_filename()
@@ -143,7 +155,8 @@ class Base:
         dialog.destroy()
 
     def delete_event(self, widget, event, data=None):
-        # return False
+        # We want to close the program and the python execution.
+        # Normally a "return False" would be sufficient.
         raise SystemExit
 
     def main(self):
@@ -152,5 +165,5 @@ class Base:
         gtk.main()
 
 if __name__ == "__main__":
-    base = Base()
+    base = Gui_cudaSimrecon()
     base.main()
