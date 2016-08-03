@@ -12,7 +12,7 @@ Author: Sebastian Schubert, mail: sschube6@gmail.com
 import pygtk
 import gtk
 from subprocess import call
-pygtk.require('2.0')
+pygtk.require('3.0')
 
 
 class Gui_cudaSimrecon:
@@ -20,6 +20,8 @@ class Gui_cudaSimrecon:
         ###############
         # Set global variables
         self.callto = "~/sim-reconstruction/cudaSirecon/cudaSireconDriver"
+        self.use_configfile = True
+        self.configfile = "./config_sebastian"
 
         # A dictionary serves for keeping track of how the buttons and text
         # entry fields are named and which parameters for input, otf, output,
@@ -121,6 +123,9 @@ class Gui_cudaSimrecon:
         # print "file", inFname
         # print "otf", otfFname
         # print "output", outFname
+        config = ""
+        if use_configfile
+            config = "--config " + configfile
         call(self.callto +
              " --input-file " + inFname +
              " --otf-file " + otfFname +
